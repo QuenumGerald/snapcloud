@@ -5,24 +5,36 @@ import { proxyActivities } from "@temporalio/workflow";
  * For now we declare the shape only to let the workflow compile.
  */
 interface Activities {
-  /**
-   * Split the client requirement into granular tasks.
-   */
-  planTasks(input: { requirement: string }): Promise<string[]>;
+    /**
+     * Découpe le besoin client en tâches atomiques.
+     */
+    splitSnapTasks(input: { requirement: string }): Promise<string[]>;
 
-  /**
-   * Generate an AWS architecture diagram URL and a CloudFormation template URL.
-   */
-  generateBlueprint(tasks: string[]): Promise<{
-    diagramUrl: string;
-    templateUrl: string;
-  }>;
+    /**
+     * Génère le diagramme AWS (Mermaid) et le template CloudFormation.
+     */
+    generateArchitecture(tasks: string[]): Promise<{
+        diagramMermaid: string;
+        cfnTemplate: string;
+    }>;
+
+    /**
+     * (Stub) Analyse de sécurité de l'architecture générée.
+     */
+    runSecurityAudit(artefacts: { cfnTemplate: string }): Promise<{ report: string }>;
+
+
+    generateBlueprint(tasks: string[]): Promise<{
+        diagramUrl: string;
+        templateUrl: string;
+    }>;
 }
 
 // Create typed activity stubs with a generous default timeout.
 const {
-  planTasks,
-  generateBlueprint,
+    splitSnapTasks,
+    generateArchitecture,
+    runSecurityAudit,
 } = proxyActivities<Activities>({ startToCloseTimeout: "10 minutes" });
 
 /**
@@ -36,17 +48,24 @@ const {
  * Output : object containing URLs for the diagram and the CloudFormation template
  */
 export async function SnapCloudWorkflow(requirement: string): Promise<{
-  diagramUrl: string;
-  templateUrl: string;
+    diagramMermaid: string;
+    cfnTemplate: string;
+    // report?: string;
 }> {
-  // 1️⃣ Task planning via MiniMax wrapper
-  const tasks = await planTasks({ requirement });
+    // 1. Découpage des tâches (MiniMax)
+    const tasks = await splitSnapTasks({ requirement });
 
-  // 2️⃣ Build diagram + template via Bedrock & agent wrappers
-  const { diagramUrl, templateUrl } = await generateBlueprint(tasks);
+    // 2. Génération de l’architecture (MiniMax ou Bedrock)
+    const { diagramMermaid, cfnTemplate } = await generateArchitecture(tasks);
 
-  // 3️⃣ Return artefact links to caller (frontend / CLI)
-  return { diagramUrl, templateUrl };
+    // 3. (Optionnel) Audit sécurité (stub)
+    // const { report } = await runSecurityAudit({ cfnTemplate });
+
+    return {
+        diagramMermaid,
+        cfnTemplate,
+        // report,
+    };
 }
 
 // Re-export workflow type for the Temporal client

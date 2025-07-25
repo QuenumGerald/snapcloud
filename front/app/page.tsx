@@ -18,8 +18,15 @@ interface Message {
 }
 
 interface ArchitectureResult {
-  diagramMermaid: string
-  cfnTemplate: string
+  tasks: string[]
+  deliverables: {
+    diagramMermaid: string
+    cfnTemplate: string
+    costEstimation: {
+      json: any
+      table: string
+    }
+  }
 }
 
 export default function AWSArchitectureDiagramTool() {
@@ -37,6 +44,9 @@ export default function AWSArchitectureDiagramTool() {
   const [chatOpen, setChatOpen] = useState(true)
   const [chatMinimized, setChatMinimized] = useState(false)
   const [currentDiagram, setCurrentDiagram] = useState("")
+  const [currentTemplate, setCurrentTemplate] = useState("")
+  const [currentCostEstimation, setCurrentCostEstimation] = useState<{json: any, table: string} | null>(null)
+  const [activeTab, setActiveTab] = useState<'diagram' | 'template' | 'cost'>('diagram')
   const [isEditing, setIsEditing] = useState(false)
   const [editedDiagram, setEditedDiagram] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -83,13 +93,15 @@ export default function AWSArchitectureDiagramTool() {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "Here is your AWS architecture diagram.",
+        content: `Here are your 3 AWS deliverables:\n\n📊 **Architecture Diagram** (Mermaid)\n☁️ **CloudFormation Template**\n💰 **Cost Estimation**: ${data.deliverables.costEstimation.json.totalMonthlyCost} ${data.deliverables.costEstimation.json.currency}/month\n\n**Tasks identified**: ${data.tasks.join(', ')}`,
         timestamp: new Date(),
       }
 
       setMessages((prev) => [...prev, assistantMessage])
-      setCurrentDiagram(data.diagramMermaid)
-      setEditedDiagram(data.diagramMermaid)
+      setCurrentDiagram(data.deliverables.diagramMermaid)
+      setCurrentTemplate(data.deliverables.cfnTemplate)
+      setCurrentCostEstimation(data.deliverables.costEstimation)
+      setEditedDiagram(data.deliverables.diagramMermaid)
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -180,14 +192,126 @@ export default function AWSArchitectureDiagramTool() {
           </div>
         </div>
 
-        {/* Diagram Display */}
+        {/* Deliverables Display */}
         <div className="flex-1 p-4">
           {currentDiagram ? (
-            <DiagramEditor
-              diagram={isEditing ? editedDiagram : currentDiagram}
-              isEditing={isEditing}
-              onDiagramChange={setEditedDiagram}
-            />
+            <div className="h-full">
+              {/* Tabs */}
+              <div className="flex border-b border-gray-200 mb-4">
+                <button 
+                  onClick={() => setActiveTab('diagram')}
+                  className={`px-4 py-2 text-sm font-medium ${
+                    activeTab === 'diagram' 
+                      ? 'text-orange-600 border-b-2 border-orange-600' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  📊 Architecture Diagram
+                </button>
+                <button 
+                  onClick={() => setActiveTab('template')}
+                  className={`px-4 py-2 text-sm font-medium ${
+                    activeTab === 'template' 
+                      ? 'text-orange-600 border-b-2 border-orange-600' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  ☁️ CloudFormation Template
+                </button>
+                <button 
+                  onClick={() => setActiveTab('cost')}
+                  className={`px-4 py-2 text-sm font-medium ${
+                    activeTab === 'cost' 
+                      ? 'text-orange-600 border-b-2 border-orange-600' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  💰 Cost Estimation
+                </button>
+              </div>
+              
+              {/* Tab Content */}
+              <div className="h-[calc(100%-3rem)]">
+                {activeTab === 'diagram' && (
+                  <DiagramEditor
+                    diagram={isEditing ? editedDiagram : currentDiagram}
+                    isEditing={isEditing}
+                    onDiagramChange={setEditedDiagram}
+                  />
+                )}
+                
+                {activeTab === 'template' && (
+                  <div className="h-full bg-white rounded-lg border p-4 overflow-auto">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900">CloudFormation Template</h3>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          const element = document.createElement('a');
+                          const file = new Blob([currentTemplate], { type: 'text/yaml' });
+                          element.href = URL.createObjectURL(file);
+                          element.download = 'aws-architecture.yaml';
+                          document.body.appendChild(element);
+                          element.click();
+                          document.body.removeChild(element);
+                        }}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Download YAML
+                      </Button>
+                    </div>
+                    <pre className="bg-gray-50 p-4 rounded-lg text-sm overflow-auto font-mono">
+                      {currentTemplate}
+                    </pre>
+                  </div>
+                )}
+                
+                {activeTab === 'cost' && currentCostEstimation && (
+                  <div className="h-full bg-white rounded-lg border p-4 overflow-auto">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900">Cost Estimation</h3>
+                      <div className="text-2xl font-bold text-orange-600">
+                        ${currentCostEstimation.json.totalMonthlyCost}/month
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Cost Table */}
+                      <div>
+                        <h4 className="text-md font-semibold mb-3">Cost Breakdown</h4>
+                        <div className="prose prose-sm max-w-none">
+                          <div dangerouslySetInnerHTML={{ 
+                            __html: currentCostEstimation.table.replace(/\n/g, '<br>').replace(/\|/g, '|') 
+                          }} />
+                        </div>
+                      </div>
+                      
+                      {/* JSON Details */}
+                      <div>
+                        <h4 className="text-md font-semibold mb-3">Detailed Breakdown</h4>
+                        <div className="space-y-2">
+                          {currentCostEstimation.json.breakdown.map((item: any, index: number) => (
+                            <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                              <div className="flex justify-between items-center">
+                                <span className="font-medium">{item.service}</span>
+                                <span className="text-orange-600 font-semibold">${item.monthlyCost}</span>
+                              </div>
+                              {item.instanceType && (
+                                <div className="text-sm text-gray-600">Type: {item.instanceType}</div>
+                              )}
+                              {item.quantity && (
+                                <div className="text-sm text-gray-600">Quantity: {item.quantity}</div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center max-w-2xl">

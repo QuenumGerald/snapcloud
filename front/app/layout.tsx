@@ -6,8 +6,8 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Architecture Diagram Tool",
-  description: "AI-powered architecture diagram generator",
+  title: "SnapCloud - AWS Architecture Generator",
+  description: "AI-powered AWS architecture generator with 3 deliverables: diagrams, CloudFormation templates, and cost estimation",
     generator: 'v0.dev'
 }
 

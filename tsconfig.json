@@ -8,6 +8,9 @@
     "outDir": "dist",
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+
     "types": ["node"]
   },
   "include": ["src/**/*.ts"]

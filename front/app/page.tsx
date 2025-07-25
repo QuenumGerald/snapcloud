@@ -18,13 +18,8 @@ interface Message {
 }
 
 interface ArchitectureResult {
-  diagram: string
-  components: Array<{
-    name: string
-    type: "compute" | "database" | "storage" | "networking" | "security" | "analytics" | "messaging"
-    description: string
-  }>
-  explanation: string
+  diagramMermaid: string
+  cfnTemplate: string
 }
 
 export default function AWSArchitectureDiagramTool() {
@@ -69,14 +64,13 @@ export default function AWSArchitectureDiagramTool() {
     setLoading(true)
 
     try {
-      const response = await fetch("/api/generate-architecture", {
+      const response = await fetch("/api/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          input: input,
-          currentDiagram: currentDiagram || undefined,
+          requirement: input,
         }),
       })
 
@@ -89,13 +83,13 @@ export default function AWSArchitectureDiagramTool() {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: data.explanation,
+        content: "Here is your AWS architecture diagram.",
         timestamp: new Date(),
       }
 
       setMessages((prev) => [...prev, assistantMessage])
-      setCurrentDiagram(data.diagram)
-      setEditedDiagram(data.diagram)
+      setCurrentDiagram(data.diagramMermaid)
+      setEditedDiagram(data.diagramMermaid)
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),

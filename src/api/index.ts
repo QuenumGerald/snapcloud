@@ -1,5 +1,5 @@
 // src/api/index.ts
-// API REST pour SnapCloud (appelle MiniMax directement)
+// REST API for SnapCloud (calls MiniMax directly)
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -11,12 +11,12 @@ app.use(express.json());
 
 app.post("/generate", async (req, res) => {
   const { requirement } = req.body;
-  if (!requirement) return res.status(400).json({ error: "Champ 'requirement' manquant" });
+  if (!requirement) return res.status(400).json({ error: "Missing 'requirement' field" });
   try {
-    // Étape 1: Découper le besoin en tâches atomiques
+    // Step 1: split the requirement into atomic tasks
     const tasks = await splitSnapTasks(requirement);
-    
-    // Étape 2: Générer l'architecture AWS et le template CloudFormation
+
+    // Step 2: generate the AWS architecture and CloudFormation template
     const { diagramMermaid, cfnTemplate, costEstimation } = await generateArchitecture(tasks);
     
     res.json({

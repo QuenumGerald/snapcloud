@@ -35,7 +35,7 @@ export default function AWSArchitectureDiagramTool() {
       id: "welcome",
       role: "assistant",
       content:
-        "Hi! I'm your AWS Solutions Architect assistant. Describe the system you want to build on AWS and I'll create a comprehensive architecture diagram using Amazon Web Services. I'll focus on AWS best practices, security, scalability, and cost optimization.",
+        "Hi! I'm your SnapCloud AI assistant. Describe the system you want to build on AWS and I'll create a comprehensive architecture with 3 deliverables: diagram, CloudFormation template, and cost estimation. I focus on AWS best practices, security, scalability, and cost optimization.",
       timestamp: new Date(),
     },
   ])
@@ -155,7 +155,7 @@ export default function AWSArchitectureDiagramTool() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Cloud className="h-6 w-6 text-orange-500" />
-              <h1 className="text-xl font-semibold text-gray-900">AWS Architecture Diagram Tool</h1>
+              <h1 className="text-xl font-semibold text-gray-900">SnapCloud</h1>
             </div>
             {currentDiagram && (
               <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
@@ -320,8 +320,8 @@ export default function AWSArchitectureDiagramTool() {
                 </div>
                 <h2 className="text-3xl font-semibold text-gray-900 mb-3">Ready to Design on AWS</h2>
                 <p className="text-gray-600 mb-8 text-lg">
-                  Use the AWS Solutions Architect assistant below to describe your system and generate a comprehensive
-                  AWS architecture diagram with best practices.
+                  Use the SnapCloud AI assistant below to describe your system and generate 3 comprehensive
+                  AWS deliverables: architecture diagram, CloudFormation template, and cost estimation.
                 </p>
                 <div className="space-y-3">
                   <p className="text-sm font-medium text-gray-700 mb-4">Try these AWS architecture examples:</p>
@@ -356,7 +356,7 @@ export default function AWSArchitectureDiagramTool() {
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               <Cloud className="h-4 w-4 text-orange-600" />
-              <span className="font-medium text-sm">AWS Solutions Architect</span>
+              <span className="font-medium text-sm">SnapCloud AI Assistant</span>
             </div>
             <div className="flex items-center gap-1">
               <Button
@@ -406,7 +406,7 @@ export default function AWSArchitectureDiagramTool() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="Describe your AWS system architecture..."
+                    placeholder="Describe your system for SnapCloud to generate AWS architecture..."
                     disabled={loading}
                     className="flex-1"
                   />
